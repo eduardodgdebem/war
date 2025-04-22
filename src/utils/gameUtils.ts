@@ -1,0 +1,131 @@
+import { GameState, Territory, PlayerId, Player } from '../types/types';
+
+export const GRID_SIZE = 6;
+
+export const PLAYER_COLORS = [
+  '#FF5252', // Red
+  '#4CAF50', // Green
+  '#2196F3', // Blue
+  '#FFC107', // Yellow
+];
+
+export const PLAYER_NAMES = [
+  'Red Army',
+  'Green Force',
+  'Blue Legion',
+  'Yellow Corps',
+];
+
+export const isAdjacent = (t1: Territory, t2: Territory): boolean => {
+  const rowDiff = Math.abs(t1.row - t2.row);
+  const colDiff = Math.abs(t1.col - t2.col);
+  
+  // Territories are adjacent if they differ by exactly one space in only one direction
+  return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
+};
+
+export const initializePlayers = (playerCount: number): Player[] => {
+  return Array.from({ length: playerCount }, (_, i) => ({
+    id: (i + 1) as PlayerId,
+    name: PLAYER_NAMES[i],
+    color: PLAYER_COLORS[i],
+    territories: 0,
+    eliminated: false,
+  }));
+};
+
+export const initializeTerritories = (playerCount: number): Territory[] => {
+  const territories: Territory[] = [];
+  
+  // Create all territories
+  for (let row = 0; row < GRID_SIZE; row++) {
+    for (let col = 0; col < GRID_SIZE; col++) {
+      const id = row * GRID_SIZE + col;
+      territories.push({
+        id,
+        owner: null,
+        troops: 0,
+        row,
+        col,
+      });
+    }
+  }
+  
+  // Randomly assign territories to players
+  const totalTerritories = GRID_SIZE * GRID_SIZE;
+  const shuffled = [...territories].sort(() => Math.random() - 0.5);
+  
+  for (let i = 0; i < totalTerritories; i++) {
+    const playerId = ((i % playerCount) + 1) as PlayerId;
+    shuffled[i].owner = playerId;
+    shuffled[i].troops = 1; // Start with one troop
+  }
+  
+  return shuffled;
+};
+
+export const countPlayerTerritories = (territories: Territory[], players: Player[]): Player[] => {
+  // Reset territory counts
+  const updatedPlayers = players.map(player => ({
+    ...player,
+    territories: 0,
+    eliminated: true, // Assume eliminated until we find territories
+  }));
+  
+  // Count territories for each player
+  territories.forEach(territory => {
+    if (territory.owner !== null) {
+      const playerIndex = territory.owner - 1;
+      updatedPlayers[playerIndex].territories += 1;
+      updatedPlayers[playerIndex].eliminated = false;
+    }
+  });
+  
+  return updatedPlayers;
+};
+
+export const checkForWinner = (players: Player[]): PlayerId | null => {
+  const activePlayers = players.filter(player => !player.eliminated);
+  
+  if (activePlayers.length === 1) {
+    return activePlayers[0].id;
+  }
+  
+  return null;
+};
+
+export const initializeGame = (playerCount: number): GameState => {
+  const players = initializePlayers(playerCount);
+  const territories = initializeTerritories(playerCount);
+  
+  const updatedPlayers = countPlayerTerritories(territories, players);
+  
+  return {
+    players: updatedPlayers,
+    territories,
+    currentPlayerIndex: 0,
+    phase: 'DEPLOY',
+    selectedTerritory: null,
+    winner: null,
+    message: `${updatedPlayers[0].name}'s turn - Deploy a troop`,
+  };
+};
+
+export const getNextPlayerIndex = (currentIndex: number, players: Player[]): number => {
+  let nextIndex = (currentIndex + 1) % players.length;
+  
+  // Skip eliminated players
+  while (players[nextIndex].eliminated && nextIndex !== currentIndex) {
+    nextIndex = (nextIndex + 1) % players.length;
+  }
+  
+  return nextIndex;
+};
+
+export const simulateBattle = (attackerTroops: number, defenderTroops: number): boolean => {
+  // Simple battle simulation: attacker has better odds with more troops
+  const attackerStrength = Math.random() * attackerTroops;
+  const defenderStrength = Math.random() * defenderTroops * 1.2; // Defender has 20% advantage
+  
+  return attackerStrength > defenderStrength;
+};
