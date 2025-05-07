@@ -8,13 +8,13 @@ interface BoardProps {
 }
 
 const Board: React.FC<BoardProps> = ({ gameState, onTerritoryClick }) => {
-  const { territories, players, selectedTerritory, currentPlayerIndex, phase } = gameState;
-  const currentPlayerId = players[currentPlayerIndex].id;
+  const { territories, players, currentPlayer, selectedTerritory, phase } = gameState;
+  const currentPlayerId = currentPlayer?.id;
   
   // Helper to get player color by ID
   const getPlayerColor = (playerId: number | null) => {
     if (playerId === null) return null;
-    const player = players.find(p => p.id === playerId);
+    const player = players.getList().find(p => p.id === playerId);
     return player ? player.color : null;
   };
   

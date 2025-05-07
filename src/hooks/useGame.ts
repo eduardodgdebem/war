@@ -5,20 +5,24 @@ import {
   isAdjacent,
   countPlayerTerritories,
   checkForWinner,
-  getNextPlayerIndex,
   simulateBattle,
 } from "../utils/gameUtils";
 
-
-function handleSelectTerritory(state: GameState, action: GameAction): GameState {
-  if(action.type !== "SELECT_TERRITORY") return state;
+function handleSelectTerritory(
+  state: GameState,
+  action: GameAction
+): GameState {
+  if (action.type !== "SELECT_TERRITORY") return state;
   const territory = state.territories.find((t) => t.id === action.territoryId);
-  const currentPlayerId = state.players[state.currentPlayerIndex].id;
+  const currentPlayerId = state.currentPlayer?.id;
   if (!territory) return state;
 
   if (state.phase === "DEPLOY") {
     if (territory.owner !== currentPlayerId) {
-      return { ...state, message: "You can only deploy troops to your own territories" };
+      return {
+        ...state,
+        message: "You can only deploy troops to your own territories",
+      };
     }
     return {
       ...state,
@@ -30,7 +34,10 @@ function handleSelectTerritory(state: GameState, action: GameAction): GameState 
   if (state.phase === "ATTACK") {
     if (state.selectedTerritory === null) {
       if (territory.owner !== currentPlayerId) {
-        return { ...state, message: "You can only attack from your own territories" };
+        return {
+          ...state,
+          message: "You can only attack from your own territories",
+        };
       }
       if (territory.troops < 2) {
         return { ...state, message: "You need at least 2 troops to attack" };
@@ -42,25 +49,34 @@ function handleSelectTerritory(state: GameState, action: GameAction): GameState 
       };
     }
 
-    const sourceTerritory = state.territories.find((t) => t.id === state.selectedTerritory);
+    const sourceTerritory = state.territories.find(
+      (t) => t.id === state.selectedTerritory
+    );
     if (!sourceTerritory) return state;
     if (territory.id === sourceTerritory.id) {
       return {
         ...state,
         selectedTerritory: null,
-        message: `${state.players[state.currentPlayerIndex].name}'s turn - Select territory to attack from`,
+        message: `${state.currentPlayer?.name}'s turn - Select territory to attack from`,
       };
     }
     if (territory.owner === currentPlayerId) {
-      return { ...state, selectedTerritory: null, message: "You cannot attack your own territories" };
+      return {
+        ...state,
+        selectedTerritory: null,
+        message: "You cannot attack your own territories",
+      };
     }
     if (!isAdjacent(sourceTerritory, territory)) {
-      return { ...state, selectedTerritory: null, message: "You can only attack adjacent territories" };
+      return {
+        ...state,
+        selectedTerritory: null,
+        message: "You can only attack adjacent territories",
+      };
     }
     return { ...state, selectedTerritory: null };
   }
 
-  // Default: just select
   return {
     ...state,
     selectedTerritory: territory.id,
@@ -70,38 +86,53 @@ function handleSelectTerritory(state: GameState, action: GameAction): GameState 
 
 function handleDeployTroop(state: GameState, action: GameAction): GameState {
   if (state.phase !== "DEPLOY" || action.type !== "DEPLOY_TROOP") return state;
-  const currentPlayerId = state.players[state.currentPlayerIndex].id;
-  const territoryIndex = state.territories.findIndex((t) => t.id === action.territoryId);
+  const currentPlayerId = state.currentPlayer!.id;
+  const territoryIndex = state.territories.findIndex(
+    (t) => t.id === action.territoryId
+  );
   if (territoryIndex === -1) return state;
   const territory = state.territories[territoryIndex];
   if (territory.owner !== currentPlayerId) {
-    return { ...state, message: "You can only deploy troops to your own territories" };
+    return {
+      ...state,
+      message: "You can only deploy troops to your own territories",
+    };
   }
   const updatedTerritories = [...state.territories];
-  updatedTerritories[territoryIndex] = { ...territory, troops: territory.troops + 1 };
+  updatedTerritories[territoryIndex] = {
+    ...territory,
+    troops: territory.troops + 3,
+  };
   return {
     ...state,
     territories: updatedTerritories,
     selectedTerritory: null,
     phase: "ATTACK",
-    message: `${state.players[state.currentPlayerIndex].name}'s turn - Select territory to attack from or end turn`,
+    message: `${state.currentPlayer?.name}'s turn - Select territory to attack from or end turn`,
   };
 }
 
-function handleAttackTerritory(state: GameState, action: GameAction): GameState {
-  if (state.phase !== "ATTACK" || action.type !== "ATTACK_TERRITORY") return state;
+function handleAttackTerritory(
+  state: GameState,
+  action: GameAction
+): GameState {
+  if (state.phase !== "ATTACK" || action.type !== "ATTACK_TERRITORY")
+    return state;
   const fromIndex = state.territories.findIndex((t) => t.id === action.fromId);
   const toIndex = state.territories.findIndex((t) => t.id === action.toId);
   if (fromIndex === -1 || toIndex === -1) return state;
   const fromTerritory = state.territories[fromIndex];
   const toTerritory = state.territories[toIndex];
-  const currentPlayerId = state.players[state.currentPlayerIndex].id;
+  const currentPlayerId = state.currentPlayer?.id;
 
   if (fromTerritory.owner !== currentPlayerId) {
-    return { ...state, message: "You can only attack from your own territories" };
+    return {
+      ...state,
+      message: "You can only attack from your own territories",
+    };
   }
   if (toTerritory.owner === currentPlayerId) {
-    return { ...state, message: "You cannot attack your own territories" };
+    return { ...state, selectedTerritory: toTerritory.id };
   }
   if (fromTerritory.troops < 2) {
     return { ...state, message: "You need at least 2 troops to attack" };
@@ -110,7 +141,10 @@ function handleAttackTerritory(state: GameState, action: GameAction): GameState 
     return { ...state, message: "You can only attack adjacent territories" };
   }
 
-  const attackSuccess = simulateBattle(fromTerritory.troops, toTerritory.troops);
+  const attackSuccess = simulateBattle(
+    fromTerritory.troops,
+    toTerritory.troops
+  );
   const updatedTerritories = [...state.territories];
 
   if (attackSuccess) {
@@ -124,10 +158,15 @@ function handleAttackTerritory(state: GameState, action: GameAction): GameState 
       troops: Math.ceil(fromTerritory.troops / 2),
     };
     const message = `Attack successful! Conquered territory at [${toTerritory.row},${toTerritory.col}]`;
-    const updatedPlayers = countPlayerTerritories(updatedTerritories, state.players);
-    const winner = checkForWinner(updatedPlayers);
+    const updatedPlayers = countPlayerTerritories(
+      updatedTerritories,
+      state.players
+    );
+    const winner = checkForWinner(updatedPlayers.getList());
     if (winner !== null) {
-      const winnerName = updatedPlayers.find((p) => p.id === winner)?.name;
+      const winnerName = updatedPlayers
+        .getList()
+        .find((p) => p.id === winner)?.name;
       return {
         ...state,
         territories: updatedTerritories,
@@ -161,13 +200,28 @@ function handleAttackTerritory(state: GameState, action: GameAction): GameState 
 }
 
 function handleEndTurn(state: GameState): GameState {
-  const nextPlayerIndex = getNextPlayerIndex(state.currentPlayerIndex, state.players);
-  const nextPlayerName = state.players[nextPlayerIndex].name;
+  state.players.setCurrent((prev) => prev?.id === state.currentPlayer?.id);
+  const nextPlayer = state.players.next();
+  let tries = 0;
+  while (state.players.getCurrent()?.eliminated) {
+    state.players.next();
+    if (++tries > state.players.getList().length) {
+      return {
+        ...state,
+        currentPlayer: state.players.getCurrent(),
+        selectedTerritory: null,
+        phase: "GAME_OVER",
+        message: "All players have been eliminated. Game over!",
+        winner: null,
+      };
+    }
+  }
+  const nextPlayerName = nextPlayer?.name;
   return {
     ...state,
-    currentPlayerIndex: nextPlayerIndex,
     phase: "DEPLOY",
     selectedTerritory: null,
+    currentPlayer: nextPlayer,
     message: `${nextPlayerName}'s turn - Deploy a troop`,
   };
 }
@@ -203,7 +257,6 @@ export const useGame = (initialPlayerCount: number) => {
   );
 
   useEffect(() => {
-    // Effect for any game state side effects if needed
   }, [gameState]);
 
   const selectTerritory = (territoryId: number) => {

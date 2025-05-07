@@ -49,8 +49,7 @@ const Game: React.FC = () => {
     return <PlayerSetup onStartGame={handleStartGame} />;
   }
   
-  const { players, currentPlayerIndex, message, phase } = gameState;
-  const currentPlayer = players[currentPlayerIndex];
+  const { players, currentPlayer, message } = gameState;
   
   return (
     <div className="min-h-screen bg-gray-900 p-4 flex flex-col">
@@ -64,14 +63,14 @@ const Game: React.FC = () => {
       
       <PlayerInfo 
         players={players}
-        currentPlayerIndex={currentPlayerIndex}
+        currentPlayer={currentPlayer}
       />
       
       <div className="mb-4 p-3 bg-gray-800 rounded-lg text-center">
         <div className="flex items-center justify-center gap-2">
           <div 
             className="w-4 h-4 rounded-full"
-            style={{ backgroundColor: currentPlayer.color }}
+            style={{ backgroundColor: currentPlayer?.color }}
           ></div>
           <p className="text-white font-medium">{message}</p>
         </div>
