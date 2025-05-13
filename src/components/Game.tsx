@@ -102,16 +102,6 @@ const Game: React.FC = () => {
         onEndTurn={endTurn}
         onResetGame={handleResetGame}
       />
-      
-      <div className="mt-auto p-3 bg-gray-800 rounded-lg">
-        <div className="flex items-start gap-2 text-sm text-gray-400">
-          <AlertTriangle size={16} className="shrink-0 mt-0.5 text-yellow-400" />
-          <div>
-            <p><strong>How to play:</strong> First deploy one troop to your territory, then attack adjacent enemy territories. After attacking, end your turn.</p>
-            <p className="mt-1"><strong>Winning:</strong> Eliminate all other players by conquering their territories.</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

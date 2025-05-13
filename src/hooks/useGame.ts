@@ -1,5 +1,5 @@
 import { useReducer, useEffect } from "react";
-import { GameState, GameAction } from "../types/types";
+import { GameState, GameAction, Player } from "../types/types";
 import {
   initializeGame,
   isAdjacent,
@@ -200,23 +200,33 @@ function handleAttackTerritory(
   }
 }
 
-function handleEndTurn(state: GameState): GameState {
+function getNextPlayer(state: GameState): Player | undefined {
   state.players.setCurrent((prev) => prev?.id === state.currentPlayer?.id);
   const nextPlayer = state.players.next();
   let tries = 0;
   while (state.players.getCurrent()?.eliminated) {
     state.players.next();
     if (++tries > state.players.getList().length) {
-      return {
-        ...state,
-        currentPlayer: state.players.getCurrent(),
-        selectedTerritory: null,
-        phase: "GAME_OVER",
-        message: "All players have been eliminated. Game over!",
-        winner: null,
-      };
+      return undefined;
     }
   }
+
+  return nextPlayer;
+}
+
+function handleEndTurn(state: GameState): GameState {
+  const nextPlayer = getNextPlayer(state);
+  if (!nextPlayer) {
+    return {
+      ...state,
+      currentPlayer: state.players.getCurrent(),
+      selectedTerritory: null,
+      phase: "GAME_OVER",
+      message: "All players have been eliminated. Game over!",
+      winner: null,
+    };
+  }
+  
   const nextPlayerName = nextPlayer?.name;
   return {
     ...state,
@@ -247,7 +257,7 @@ const handleRedo = (state: GameState): GameState => {
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   let newState: GameState | undefined;
 
-  if(action.type !== "UNDO" && action.type !== "REDO") {
+  if (action.type !== "UNDO" && action.type !== "REDO") {
     if (!state.history) {
       state.history = new DoublyLinkedList<GameState>();
     }
@@ -287,8 +297,7 @@ export const useGame = (initialPlayerCount: number) => {
     }
   );
 
-  useEffect(() => {
-  }, [gameState]);
+  useEffect(() => {}, [gameState]);
 
   const selectTerritory = (territoryId: number) => {
     dispatch({ type: "SELECT_TERRITORY", territoryId });
