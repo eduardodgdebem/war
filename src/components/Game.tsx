@@ -3,6 +3,7 @@ import Board from './Board';
 import PlayerInfo from './PlayerInfo';
 import GameControls from './GameControls';
 import PlayerSetup from './PlayerSetup';
+import GameHistory from './GameHistory';
 import { useGame } from '../hooks/useGame';
 import { Territory } from '../types/types';
 import { Shield, AlertTriangle } from 'lucide-react';
@@ -12,7 +13,16 @@ const DEFAULT_PLAYER_COUNT = 2;
 const Game: React.FC = () => {
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [playerCount, setPlayerCount] = useState(DEFAULT_PLAYER_COUNT);
-  const { gameState, selectTerritory, deployTroop, attackTerritory, endTurn, resetGame } = useGame(playerCount);
+  const { 
+    gameState, 
+    selectTerritory, 
+    deployTroop, 
+    attackTerritory, 
+    endTurn, 
+    resetGame,
+    undo,
+    redo 
+  } = useGame(playerCount);
   
   const handleTerritoryClick = (territory: Territory) => {
     const { selectedTerritory, phase } = gameState;
@@ -52,7 +62,7 @@ const Game: React.FC = () => {
   const { players, currentPlayer, message } = gameState;
   
   return (
-    <div className="min-h-screen bg-gray-900 p-4 flex flex-col">
+    <div className="min-h-screen bg-gray-900 p-6">
       <header className="mb-6 text-center">
         <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
           <Shield className="text-blue-400" />
@@ -75,6 +85,12 @@ const Game: React.FC = () => {
           <p className="text-white font-medium">{message}</p>
         </div>
       </div>
+      
+      <GameHistory 
+        gameState={gameState}
+        onUndo={undo}
+        onRedo={redo}
+      />
       
       <Board 
         gameState={gameState}

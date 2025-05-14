@@ -21,7 +21,6 @@ export const isAdjacent = (t1: Territory, t2: Territory): boolean => {
   const rowDiff = Math.abs(t1.row - t2.row);
   const colDiff = Math.abs(t1.col - t2.col);
   
-  // Territories are adjacent if they differ by exactly one space in only one direction
   return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
 };
 
@@ -40,7 +39,6 @@ export const initializePlayers = (playerCount: number): CircularLikedList<Player
 export const initializeTerritories = (playerCount: number): Territory[] => {
   const territories: Territory[] = [];
   
-  // Create all territories
   for (let row = 0; row < GRID_SIZE; row++) {
     for (let col = 0; col < GRID_SIZE; col++) {
       const id = row * GRID_SIZE + col;
@@ -54,28 +52,25 @@ export const initializeTerritories = (playerCount: number): Territory[] => {
     }
   }
   
-  // Randomly assign territories to players
   const totalTerritories = GRID_SIZE * GRID_SIZE;
   const shuffled = [...territories].sort(() => Math.random() - 0.5);
   
   for (let i = 0; i < totalTerritories; i++) {
     const playerId = ((i % playerCount) + 1) as PlayerId;
     shuffled[i].owner = playerId;
-    shuffled[i].troops = 1; // Start with one troop
+    shuffled[i].troops = 1;
   }
   
   return shuffled;
 };
 
 export const countPlayerTerritories = (territories: Territory[], players: CircularLikedList<Player>): CircularLikedList<Player> => {
-  // Reset territory counts
   const updatedPlayers = players.getList().map(player => ({
     ...player,
     territories: 0,
-    eliminated: true, // Assume eliminated until we find territories
+    eliminated: true, 
   }));
   
-  // Count territories for each player
   territories.forEach(territory => {
     if (territory.owner !== null) {
       const playerIndex = territory.owner - 1;

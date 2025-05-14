@@ -1,4 +1,5 @@
 import CircularLikedList from "../utils/circularLikedList";
+import DoublyLinkedList from '../utils/doubleLinkedList';
 
 export type PlayerId = 1 | 2 | 3 | 4;
 
@@ -26,6 +27,7 @@ export interface GameState {
   selectedTerritory: number | null;
   winner: PlayerId | null;
   message: string;
+  history?: DoublyLinkedList<GameState>;
 }
 
 export type GameAction = 
@@ -33,4 +35,6 @@ export type GameAction =
   | { type: 'DEPLOY_TROOP'; territoryId: number }
   | { type: 'ATTACK_TERRITORY'; fromId: number; toId: number }
   | { type: 'END_TURN' }
-  | { type: 'RESET_GAME'; playerCount: number };
+  | { type: 'RESET_GAME'; playerCount: number }
+  | { type: 'UNDO'; }
+  | { type: 'REDO'; }

@@ -7,6 +7,7 @@ import {
   checkForWinner,
   simulateBattle,
 } from "../utils/gameUtils";
+import DoublyLinkedList from "../utils/doubleLinkedList";
 
 function handleSelectTerritory(
   state: GameState,
@@ -231,8 +232,33 @@ function handleResetGame(action: GameAction): GameState | undefined {
   return initializeGame(action.playerCount);
 }
 
+const handleUndo = (state: GameState): GameState => {
+  if (!state.history) return state;
+  const previousState = state.history.undo();
+  return previousState || state;
+};
+
+const handleRedo = (state: GameState): GameState => {
+  if (!state.history) return state;
+  const nextState = state.history.redo();
+  return nextState || state;
+};
+
 const gameReducer = (state: GameState, action: GameAction): GameState => {
+  let newState: GameState | undefined;
+
+  if(action.type !== "UNDO" && action.type !== "REDO") {
+    if (!state.history) {
+      state.history = new DoublyLinkedList<GameState>();
+    }
+    state.history.push({ ...state });
+  }
+
   switch (action.type) {
+    case "UNDO":
+      return handleUndo(state);
+    case "REDO":
+      return handleRedo(state);
     case "SELECT_TERRITORY":
       return handleSelectTerritory(state, action);
     case "DEPLOY_TROOP":
@@ -242,7 +268,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case "END_TURN":
       return handleEndTurn(state);
     case "RESET_GAME":
-      const newState = handleResetGame(action);
+      newState = handleResetGame(action);
       return newState ? newState : state;
     default:
       return state;
@@ -253,7 +279,12 @@ export const useGame = (initialPlayerCount: number) => {
   const [gameState, dispatch] = useReducer(
     gameReducer,
     initialPlayerCount,
-    initializeGame
+    (count) => {
+      const initialState = initializeGame(count);
+      initialState.history = new DoublyLinkedList<GameState>();
+      initialState.history.push(initialState);
+      return initialState;
+    }
   );
 
   useEffect(() => {
@@ -279,6 +310,14 @@ export const useGame = (initialPlayerCount: number) => {
     dispatch({ type: "RESET_GAME", playerCount });
   };
 
+  const undo = () => {
+    dispatch({ type: "UNDO" });
+  };
+
+  const redo = () => {
+    dispatch({ type: "REDO" });
+  };
+
   return {
     gameState,
     selectTerritory,
@@ -286,5 +325,7 @@ export const useGame = (initialPlayerCount: number) => {
     attackTerritory,
     endTurn,
     resetGame,
+    undo,
+    redo,
   };
 };
