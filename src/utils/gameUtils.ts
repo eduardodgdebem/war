@@ -11,10 +11,10 @@ export const PLAYER_COLORS = [
 ];
 
 export const PLAYER_NAMES = [
-  'Red Army',
-  'Green Force',
-  'Blue Legion',
-  'Yellow Corps',
+  'Vermelho',
+  'Verde',
+  'Azul',
+  'Amarelo',
 ];
 
 export const isAdjacent = (t1: Territory, t2: Territory): boolean => {
@@ -31,6 +31,7 @@ export const initializePlayers = (playerCount: number): CircularLikedList<Player
     color: PLAYER_COLORS[i],
     territories: 0,
     eliminated: false,
+    cards: getRandomCards(),
   }));
 
   return new CircularLikedList(playersList);
@@ -82,11 +83,25 @@ export const countPlayerTerritories = (territories: Territory[], players: Circul
   return new CircularLikedList(updatedPlayers);
 };
 
-export const checkForWinner = (players: Player[]): PlayerId | null => {
+export const checkForWinner = (players: Player[], territories: Territory[]): PlayerId | null => {
   const activePlayers = players.filter(player => !player.eliminated);
   
   if (activePlayers.length === 1) {
     return activePlayers[0].id;
+  }
+
+  const totalTerritories = territories.length;
+  const playerTerritoryCount = new Map<PlayerId, number>();
+  territories.forEach(territory => {
+    if (territory.owner !== null) {
+      playerTerritoryCount.set(territory.owner, (playerTerritoryCount.get(territory.owner) || 0) + 1);
+    }
+  });
+  const winnerTreshold = Math.floor(totalTerritories * 0.75);
+  for (const [playerId, count] of playerTerritoryCount.entries()) {
+    if (count >= winnerTreshold) {
+      return playerId;
+    }
   }
   
   return null;
@@ -105,7 +120,8 @@ export const initializeGame = (playerCount: number): GameState => {
     phase: 'DEPLOY',
     selectedTerritory: null,
     winner: null,
-    message: `${updatedPlayers.getCurrent()?.name}'s turn - Deploy a troop`,
+    message: `Turno do ${updatedPlayers.getCurrent()?.name} - Posicione tropas`,
+    cardSelected: false,
   };
 };
 
@@ -125,3 +141,8 @@ export const simulateBattle = (attackerTroops: number, defenderTroops: number): 
   
   return attackerStrength > defenderStrength;
 };
+
+export const getRandomCards = (): number[] => {
+  const possibleCards = [1, 2, 3, 5, 8];
+  return [...possibleCards].sort(() => Math.random() - 0.5);
+}

@@ -9,6 +9,7 @@ export interface Player {
   color: string;
   territories: number;
   eliminated: boolean;
+  cards: number[];
 }
 
 export interface Territory {
@@ -28,6 +29,7 @@ export interface GameState {
   winner: PlayerId | null;
   message: string;
   history?: DoublyLinkedList<GameState>;
+  cardSelected: boolean;
 }
 
 export type GameAction = 
@@ -36,5 +38,6 @@ export type GameAction =
   | { type: 'ATTACK_TERRITORY'; fromId: number; toId: number }
   | { type: 'END_TURN' }
   | { type: 'RESET_GAME'; playerCount: number }
+  | { type: 'SELECT_CARD'; cardSelected: boolean }
   | { type: 'UNDO'; }
   | { type: 'REDO'; }
