@@ -17,14 +17,11 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onStartGame }) => {
           </div>
         </div>
         
-        <h1 className="text-3xl font-bold text-center mb-2">War Game</h1>
-        <p className="text-gray-400 text-center mb-8">
-          Conquer territories and defeat your enemies!
-        </p>
-        
+        <h1 className="text-3xl font-bold text-center mb-2">War</h1>
+
         <div className="mb-6">
           <label className="block text-gray-300 mb-2 text-center">
-            Select Number of Players
+            Selecione o número de jogadores
           </label>
           <div className="flex justify-center gap-4">
             {[2, 3, 4].map(count => (
@@ -49,7 +46,7 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onStartGame }) => {
             onClick={() => onStartGame(playerCount)}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold transition-colors"
           >
-            Start Game
+            Começar o Jogo
           </button>
         </div>
       </div>
