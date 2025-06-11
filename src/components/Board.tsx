@@ -1,4 +1,3 @@
-import React from 'react';
 import Territory from './Territory';
 import { Territory as TerritoryType, GameState } from '../types/types';
 import { GRID_SIZE, isAdjacent } from '../utils/gameUtils';

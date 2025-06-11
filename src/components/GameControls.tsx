@@ -1,4 +1,3 @@
-import React from 'react';
 import { GameState } from '../types/types';
 import { Flag, Sword, SkipForward, RefreshCw } from 'lucide-react';
 
