@@ -1,20 +1,21 @@
 import { Player } from '../types/types';
 import { Shield } from 'lucide-react';
+import CircularLikedList from '../utils/circularLikedList';
 
 interface PlayerInfoProps {
-  players: Player[];
-  currentPlayerIndex: number;
+  players: CircularLikedList<Player>;
+  currentPlayer: Player | undefined;
 }
 
-const PlayerInfo: React.FC<PlayerInfoProps> = ({ players, currentPlayerIndex }) => {
+const PlayerInfo: React.FC<PlayerInfoProps> = ({ players, currentPlayer }) => {
   return (
     <div className="flex flex-wrap justify-center gap-4 mb-4">
-      {players.map((player, index) => (
+      {players.getList().map((player) => (
         <div 
           key={player.id}
           className={`
             flex items-center gap-2 px-4 py-2 rounded-full
-            ${index === currentPlayerIndex ? 'ring-2 ring-white' : 'opacity-70'}
+            ${player.id === currentPlayer?.id ? 'ring-2 ring-white' : 'opacity-70'}
             ${player.eliminated ? 'line-through opacity-50' : ''}
           `}
           style={{ backgroundColor: player.color }}

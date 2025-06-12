@@ -1,4 +1,5 @@
 import { GameState, Territory, PlayerId, Player } from '../types/types';
+import CircularLikedList from './circularLikedList';
 
 export const GRID_SIZE = 6;
 
@@ -24,14 +25,16 @@ export const isAdjacent = (t1: Territory, t2: Territory): boolean => {
   return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
 };
 
-export const initializePlayers = (playerCount: number): Player[] => {
-  return Array.from({ length: playerCount }, (_, i) => ({
+export const initializePlayers = (playerCount: number): CircularLikedList<Player> => {
+  const playersList = Array.from({ length: playerCount }, (_, i) => ({
     id: (i + 1) as PlayerId,
     name: PLAYER_NAMES[i],
     color: PLAYER_COLORS[i],
     territories: 0,
     eliminated: false,
   }));
+
+  return new CircularLikedList(playersList);
 };
 
 export const initializeTerritories = (playerCount: number): Territory[] => {
@@ -64,9 +67,9 @@ export const initializeTerritories = (playerCount: number): Territory[] => {
   return shuffled;
 };
 
-export const countPlayerTerritories = (territories: Territory[], players: Player[]): Player[] => {
+export const countPlayerTerritories = (territories: Territory[], players: CircularLikedList<Player>): CircularLikedList<Player> => {
   // Reset territory counts
-  const updatedPlayers = players.map(player => ({
+  const updatedPlayers = players.getList().map(player => ({
     ...player,
     territories: 0,
     eliminated: true, // Assume eliminated until we find territories
@@ -81,7 +84,7 @@ export const countPlayerTerritories = (territories: Territory[], players: Player
     }
   });
   
-  return updatedPlayers;
+  return new CircularLikedList(updatedPlayers);
 };
 
 export const checkForWinner = (players: Player[]): PlayerId | null => {
@@ -102,19 +105,18 @@ export const initializeGame = (playerCount: number): GameState => {
   
   return {
     players: updatedPlayers,
+    currentPlayer: updatedPlayers.getCurrent(),
     territories,
-    currentPlayerIndex: 0,
     phase: 'DEPLOY',
     selectedTerritory: null,
     winner: null,
-    message: `${updatedPlayers[0].name}'s turn - Deploy a troop`,
+    message: `${updatedPlayers.getCurrent()?.name}'s turn - Deploy a troop`,
   };
 };
 
 export const getNextPlayerIndex = (currentIndex: number, players: Player[]): number => {
   let nextIndex = (currentIndex + 1) % players.length;
   
-  // Skip eliminated players
   while (players[nextIndex].eliminated && nextIndex !== currentIndex) {
     nextIndex = (nextIndex + 1) % players.length;
   }
@@ -123,9 +125,8 @@ export const getNextPlayerIndex = (currentIndex: number, players: Player[]): num
 };
 
 export const simulateBattle = (attackerTroops: number, defenderTroops: number): boolean => {
-  // Simple battle simulation: attacker has better odds with more troops
   const attackerStrength = Math.random() * attackerTroops;
-  const defenderStrength = Math.random() * defenderTroops * 1.2; // Defender has 20% advantage
+  const defenderStrength = Math.random() * defenderTroops;
   
   return attackerStrength > defenderStrength;
 };

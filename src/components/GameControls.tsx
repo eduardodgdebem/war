@@ -12,11 +12,10 @@ const GameControls: React.FC<GameControlsProps> = ({
   onEndTurn,
   onResetGame,
 }) => {
-  const { phase, players, currentPlayerIndex, winner } = gameState;
-  const currentPlayer = players[currentPlayerIndex];
+  const { phase, players, winner } = gameState;
   
   if (phase === 'GAME_OVER') {
-    const winnerPlayer = players.find(p => p.id === winner);
+    const winnerPlayer = players.getList().find(p => p.id === winner);
     
     return (
       <div className="flex flex-col items-center gap-4 my-6">

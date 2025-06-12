@@ -1,3 +1,5 @@
+import CircularLikedList from "../utils/circularLikedList";
+
 export type PlayerId = 1 | 2 | 3 | 4;
 
 export interface Player {
@@ -17,9 +19,9 @@ export interface Territory {
 }
 
 export interface GameState {
-  players: Player[];
+  players: CircularLikedList<Player>;
+  currentPlayer?: Player;
   territories: Territory[];
-  currentPlayerIndex: number;
   phase: 'DEPLOY' | 'ATTACK' | 'GAME_OVER';
   selectedTerritory: number | null;
   winner: PlayerId | null;
