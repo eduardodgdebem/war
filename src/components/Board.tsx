@@ -11,14 +11,12 @@ const Board: React.FC<BoardProps> = ({ gameState, onTerritoryClick }) => {
   const { territories, players, currentPlayer, selectedTerritory, phase } = gameState;
   const currentPlayerId = currentPlayer?.id;
   
-  // Helper to get player color by ID
   const getPlayerColor = (playerId: number | null) => {
     if (playerId === null) return null;
     const player = players.getList().find(p => p.id === playerId);
     return player ? player.color : null;
   };
   
-  // Check if a territory is a valid attack target
   const isPossibleTarget = (territory: TerritoryType) => {
     if (phase !== 'ATTACK' || selectedTerritory === null) return false;
     
@@ -33,7 +31,6 @@ const Board: React.FC<BoardProps> = ({ gameState, onTerritoryClick }) => {
     );
   };
   
-  // Generate grid items
   const renderGrid = () => {
     const grid = [];
     
