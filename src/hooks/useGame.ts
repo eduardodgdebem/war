@@ -22,13 +22,13 @@ function handleSelectTerritory(
     if (territory.owner !== currentPlayerId) {
       return {
         ...state,
-        message: "You can only deploy troops to your own territories",
+        message: "Você só pode implantar tropas em seus próprios territórios",
       };
     }
     return {
       ...state,
       selectedTerritory: territory.id,
-      message: "Deploy a troop to this territory",
+      message: "Implante uma tropa neste território"
     };
   }
 
@@ -41,12 +41,12 @@ function handleSelectTerritory(
         };
       }
       if (territory.troops < 2) {
-        return { ...state, message: "You need at least 2 troops to attack" };
+        return { ...state, message: "Você precisa de pelo menos 2 tropas para atacar" };
       }
       return {
         ...state,
         selectedTerritory: territory.id,
-        message: "Select an enemy territory to attack",
+        message: "Selecione um território inimigo para atacar",
       };
     }
 
@@ -58,21 +58,21 @@ function handleSelectTerritory(
       return {
         ...state,
         selectedTerritory: null,
-        message: `${state.currentPlayer?.name}'s turn - Select territory to attack from`,
+        message: `Turno do ${state.currentPlayer?.name} - Selecione o território de onde atacar`,
       };
     }
     if (territory.owner === currentPlayerId) {
       return {
         ...state,
         selectedTerritory: null,
-        message: "You cannot attack your own territories",
+        message: "Você não pode atacar seus próprios territórios",
       };
     }
     if (!isAdjacent(sourceTerritory, territory)) {
       return {
         ...state,
         selectedTerritory: null,
-        message: "You can only attack adjacent territories",
+        message: "Você só pode atacar territórios adjacentes",
       };
     }
     return { ...state, selectedTerritory: null };
@@ -96,20 +96,26 @@ function handleDeployTroop(state: GameState, action: GameAction): GameState {
   if (territory.owner !== currentPlayerId) {
     return {
       ...state,
-      message: "You can only deploy troops to your own territories",
+      message: "Você só pode implantar tropas em seus próprios territórios",
     };
   }
   const updatedTerritories = [...state.territories];
+  let troopsToDeploy = 1;
+  if(state.cardSelected) {
+    troopsToDeploy = state.currentPlayer?.cards.pop() || 1;
+  }
+
   updatedTerritories[territoryIndex] = {
     ...territory,
-    troops: territory.troops + 3,
+    troops: territory.troops + troopsToDeploy,
   };
   return {
     ...state,
     territories: updatedTerritories,
     selectedTerritory: null,
     phase: "ATTACK",
-    message: `${state.currentPlayer?.name}'s turn - Select territory to attack from or end turn`,
+    message: `${state.currentPlayer?.name} - Seu turno: selecione um território para atacar ou termine o turno`,
+    cardSelected: false,
   };
 }
 
@@ -129,17 +135,17 @@ function handleAttackTerritory(
   if (fromTerritory.owner !== currentPlayerId) {
     return {
       ...state,
-      message: "You can only attack from your own territories",
+      message: "Você só pode atacar a partir dos seus próprios territórios",
     };
   }
   if (toTerritory.owner === currentPlayerId) {
     return { ...state, selectedTerritory: toTerritory.id };
   }
   if (fromTerritory.troops < 2) {
-    return { ...state, message: "You need at least 2 troops to attack" };
+    return { ...state, message: "Você precisa de pelo menos 2 tropas para atacar" };
   }
   if (!isAdjacent(fromTerritory, toTerritory)) {
-    return { ...state, message: "You can only attack adjacent territories" };
+    return { ...state, message: "Você só pode atacar territórios adjacentes" };
   }
 
   const attackSuccess = simulateBattle(
@@ -158,12 +164,12 @@ function handleAttackTerritory(
       ...fromTerritory,
       troops: Math.ceil(fromTerritory.troops / 2),
     };
-    const message = `Attack successful! Conquered territory at [${toTerritory.row},${toTerritory.col}]`;
+    const message = `Ataque bem-sucedido! Conquistou o território em [${toTerritory.row},${toTerritory.col}]`;
     const updatedPlayers = countPlayerTerritories(
       updatedTerritories,
       state.players
     );
-    const winner = checkForWinner(updatedPlayers.getList());
+    const winner = checkForWinner(updatedPlayers.getList(), state.territories);
     if (winner !== null) {
       const winnerName = updatedPlayers
         .getList()
@@ -174,7 +180,7 @@ function handleAttackTerritory(
         players: updatedPlayers,
         winner,
         phase: "GAME_OVER",
-        message: `${winnerName} has conquered all territories and won the game!`,
+        message: `${winnerName} conquistou todos os territórios e venceu o jogo!`,
       };
     }
     return {
@@ -195,7 +201,7 @@ function handleAttackTerritory(
     return {
       ...state,
       territories: updatedTerritories,
-      message: `Attack failed! Lost troops attacking [${toTerritory.row},${toTerritory.col}]`,
+      message: `Ataque falhou! Perdeu tropas atacando [${toTerritory.row},${toTerritory.col}]`,
     };
   }
 }
@@ -222,18 +228,18 @@ function handleEndTurn(state: GameState): GameState {
       currentPlayer: state.players.getCurrent(),
       selectedTerritory: null,
       phase: "GAME_OVER",
-      message: "All players have been eliminated. Game over!",
+      message: "Todos os jogadores foram eliminados. Fim de jogo!",
       winner: null,
     };
   }
-  
+
   const nextPlayerName = nextPlayer?.name;
   return {
     ...state,
     phase: "DEPLOY",
     selectedTerritory: null,
     currentPlayer: nextPlayer,
-    message: `${nextPlayerName}'s turn - Deploy a troop`,
+    message: `${nextPlayerName} - Seu turno: implante uma tropa`,
   };
 }
 
@@ -253,6 +259,14 @@ const handleRedo = (state: GameState): GameState => {
   const nextState = state.history.redo();
   return nextState || state;
 };
+
+const handleToggleCard = (state: GameState, action: GameAction): GameState => {
+  if (action.type !== "SELECT_CARD") return state;
+  return {
+    ...state,
+    cardSelected: action.cardSelected,
+  };
+}
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   let newState: GameState | undefined;
@@ -280,6 +294,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case "RESET_GAME":
       newState = handleResetGame(action);
       return newState ? newState : state;
+    case "SELECT_CARD":
+      return handleToggleCard(state, action);
     default:
       return state;
   }
@@ -327,6 +343,10 @@ export const useGame = (initialPlayerCount: number) => {
     dispatch({ type: "REDO" });
   };
 
+  const selectCard = (cardSelected: boolean) => {
+    dispatch({ type: "SELECT_CARD", cardSelected });
+  }
+
   return {
     gameState,
     selectTerritory,
@@ -336,5 +356,6 @@ export const useGame = (initialPlayerCount: number) => {
     resetGame,
     undo,
     redo,
+    selectCard
   };
 };

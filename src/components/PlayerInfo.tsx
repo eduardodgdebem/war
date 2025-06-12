@@ -23,7 +23,7 @@ const PlayerInfo: React.FC<PlayerInfoProps> = ({ players, currentPlayer }) => {
           <Shield size={18} className="text-white" />
           <span className="font-bold text-white">{player.name}</span>
           <span className="bg-black/30 px-2 py-0.5 rounded-full text-white text-sm">
-            {player.territories} territories
+            {player.territories} Territórios
           </span>
         </div>
       ))}

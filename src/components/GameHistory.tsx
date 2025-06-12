@@ -26,7 +26,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ onUndo, onRedo, gameState }) 
         title="Undo last move"
       >
         <RotateCcw size={18} />
-        Undo
+        Desfazer
       </button>
 
       <button
@@ -41,7 +41,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ onUndo, onRedo, gameState }) 
         title="Redo last move"
       >
         <RotateCw size={18} />
-        Redo
+        Refazer
       </button>
     </div>
   );
