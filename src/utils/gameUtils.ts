@@ -21,7 +21,7 @@ export const isAdjacent = (t1: Territory, t2: Territory): boolean => {
   const rowDiff = Math.abs(t1.row - t2.row);
   const colDiff = Math.abs(t1.col - t2.col);
   
-  return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
+  return rowDiff <= 1 && colDiff <= 1;
 };
 
 export const initializePlayers = (playerCount: number): CircularLikedList<Player> => {
